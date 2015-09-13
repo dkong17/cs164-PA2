@@ -60,6 +60,9 @@ import java_cup.runtime.Symbol;
 	/* nothing special to do in the initial state */
 	break;
 
+    case LINE_COMMENT:
+        return new Symbol(TokenConstants.ERROR, "EOF in comment");
+
     case COMMENT:
         return new Symbol(TokenConstants.ERROR, "EOF in comment");
 
@@ -105,10 +108,13 @@ TYPEID = [A-Z][A-Za-z0-9_]*
 OBJECTID = [a-z][A-z0-9_]*
 
 %%
+/* Add TYPEID and OBJECTID to the STRINGTABLE */
 <YYINITIAL>{TYPEID}     { return new Symbol(TokenConstants.TYPEID,
                             AbstractTable.idtable.addString(yytext())); }
 <YYINITIAL>{OBJECTID}   { return new Symbol(TokenConstants.OBJECTID,
                             AbstractTable.idtable.addString(yytext())); }
+
+/* Start lexing string constant. */
 <YYINITIAL>\"           { string_buf.setLength(0); yybegin(STRING); }
 
 
@@ -119,6 +125,7 @@ OBJECTID = [a-z][A-z0-9_]*
 <LINE_COMMENT>.*        { ; }
 <LINE_COMMENT>\n        { yybegin(YYINITIAL); curr_lineno += 1; }
 
+/* (*...*) encased comments */ 
 <YYINITIAL>"(*"         { yybegin(COMMENT); comment_count += 1; }
 <COMMENT>"(*"           { comment_count += 1; }
 <COMMENT>"*)"           { comment_count -= 1;
@@ -129,7 +136,8 @@ OBJECTID = [a-z][A-z0-9_]*
 
 
 <YYINITIAL>"=>"		{ return new Symbol(TokenConstants.DARROW); }
-<YYINITIAL><-       { return new Symbol(TokenConstants.ASSIGN); }
+/* Assign token */
+<YYINITIAL>"<-"     { return new Symbol(TokenConstants.ASSIGN); }
 
 
 
@@ -194,6 +202,7 @@ OBJECTID = [a-z][A-z0-9_]*
                           return new Symbol(TokenConstants.STR_CONST, AbstractTable.stringtable.addString(s));
                         }
 
+/* Null character check */
 <STRING>\x00            { yybegin(STRING_ERR);
                                            return new Symbol(TokenConstants.ERROR, "String contains null character"); }
 
