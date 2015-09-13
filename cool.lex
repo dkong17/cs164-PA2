@@ -36,9 +36,8 @@ import java_cup.runtime.Symbol;
 	return filename;
     }
 
-    /*
-     * Add extra field and methods here.
-     */
+    //For keeping track of nested comments
+    private int comment_count = 0;
 %}
 
 
@@ -61,11 +60,15 @@ import java_cup.runtime.Symbol;
 	/* nothing special to do in the initial state */
 	break;
 
-/* If necessary, add code for other states here, e.g:
-    case LINE_COMMENT:
-	   ...
-	   break;
- */
+    case COMMENT:
+        return new Symbol(TokenConstants.ERROR, "EOF in comment");
+
+    case STRING:
+        return new Symbol(TokenConstants.ERROR, "EOF in string constant");
+
+    case STRING_ERR:
+        return new Symbol(TokenConstants.ERROR, "EOF in string Constant");
+
     }
     return new Symbol(TokenConstants.EOF);
 %eofval}
@@ -74,12 +77,14 @@ import java_cup.runtime.Symbol;
 %class CoolLexer
 %cup
 
-
 /* This defines a new start condition for line comments.
  * .
  * Hint: You might need additional start conditions. */
 %state LINE_COMMENT
 
+%state COMMENT
+%state STRING
+%state STRING_ERR
 
 /* Define lexical rules after the %% separator.  There is some code
  * provided for you that you may wish to use, but you may change it
@@ -95,21 +100,36 @@ import java_cup.runtime.Symbol;
  * .
  * The complete Cool lexical specification is given in the Cool
  * Reference Manual (CoolAid).  Please be sure to look there. */
+
+TYPEID = [A-Z][A-Za-z0-9_]*
+OBJECTID = [a-z][A-z0-9_]*
+
 %%
-
-<YYINITIAL>\n	 { /* Fill-in here. */ }
-<YYINITIAL>\s+ { /* Fill-in here. */ }
-
-<YYINITIAL>"--"         { /* Fill-in here. */ }
-<LINE_COMMENT>.*        { /* Fill-in here. */ }
-<LINE_COMMENT>\n        { /* Fill-in here. */ }
+<YYINITIAL>{TYPEID}     { return new Symbol(TokenConstants.TYPEID,
+                            AbstractTable.idtable.addString(yytext())); }
+<YYINITIAL>{OBJECTID}   { return new Symbol(TokenConstants.OBJECTID,
+                            AbstractTable.idtable.addString(yytext())); }
+<YYINITIAL>\"           { string_buf.setLength(0); yybegin(STRING); }
 
 
+<YYINITIAL>\n	        { curr_lineno += 1; }
+<YYINITIAL>\s+          { ; }
 
+<YYINITIAL>"--"         { yybegin(LINE_COMMENT) }
+<LINE_COMMENT>.*        { ; }
+<LINE_COMMENT>\n        { yybegin(YYINITIAL); curr_lineno += 1; }
+
+<YYINITIAL>"(*"         { yybegin(COMMENT); comment_count += 1; }
+<COMMENT>"(*"           { comment_count += 1; }
+<COMMENT>"*)"           { comment_count -= 1;
+                          if(comment_count==0) { yybegin(YYINITIAL); }
+                        }
+<COMMENT>\n             { curr_lineno += 1; }
+<COMMENT>.              { ; }
 
 
 <YYINITIAL>"=>"		{ return new Symbol(TokenConstants.DARROW); }
-
+<YYINITIAL><-       { return new Symbol(TokenConstants.ASSIGN); }
 
 
 
@@ -166,6 +186,34 @@ import java_cup.runtime.Symbol;
 <YYINITIAL>"{"			{ return new Symbol(TokenConstants.LBRACE); }
 
 
+<STRING>\"              { yybegin(YYINITIAL); 
+                          String s = string_buf.toString();
+                          if(s.length() >= MAX_STR_CONST) {
+                              return new Symbol(TokenConstants.ERROR, "String constant too long");
+                          }
+                          return new Symbol(TokenConstants.STR_CONST, AbstractTable.stringtable.addString(s));
+                        }
+
+<STRING>\x00            { yybegin(STRING_ERR);
+                                           return new Symbol(TokenConstants.ERROR, "String contains null character"); }
+
+<STRING>\n              { yybegin(YYINITIAL); curr_lineno += 1;
+                          return new Symbol(TokenConstants.ERROR, "Unterminated string constant"); }
+
+<STRING>"\b"            { string_buf.append("\b"); }
+<STRING>"\f"            { string_buf.append("\f"); }
+<STRING>"\t"            { string_buf.append("\t"); }
+<STRING>\\\\n           { string_buf.append("\\n"); }
+<STRING>\\n             { string_buf.append("\n"); }
+<STRING>\\\n            { string_buf.append("\n"); }
+<STRING>\\\"            { string_buf.append("\""); }
+<STRING>\\\\            { string_buf.append("\\"); }
+<STRING>\\              { ; }
+<STRING>[^\"\0\n\\]+    { string_buf.append(yytext()); }
+
+<STRING_ERR>\n          { yybegin(YYINITIAL); curr_lineno += 1; }
+<STRING_ERR>\"          { yybegin(YYINITIAL); }
+<STRING_ERR>.           { ; }
 
 
 .                { /*
