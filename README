@@ -122,3 +122,15 @@ Instructions
 Write-up for PA2J
 -----------------
 
+	Added were a private field COMMENT_COUNT and states COMMENT, STRING, 
+and STRING_ERR. The field was added in order to account for nesting of 
+comments enclosed by (*...*). Using a counter allowed the scanner to properly 
+enter and exit the COMMENT state. The COMMENT state allowed for the detection of 
+unmatched *) error and proper non-tokenization of characters within comment blocks.
+Similarly, the STRING state helped find the "boundaries" for the declaration of
+string constants. STRING_ERR was a necessary additional states in order to continue
+lexing at the proper place after an invalid character was found or the string was
+too long.
+	All four states (LINE_COMMENT, COMMENT, STRING, STRING_ERR) were added as
+cases to the switch for the end-of-file function. Each of the cases returns an
+ERROR symbol and reports the pertinent error message.
