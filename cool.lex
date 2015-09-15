@@ -61,15 +61,19 @@ import java_cup.runtime.Symbol;
 	break;
 
     case LINE_COMMENT:
+        begin (YYINITIAL);
         return new Symbol(TokenConstants.ERROR, "EOF in comment");
 
     case COMMENT:
+        begin (YYINITIAL);
         return new Symbol(TokenConstants.ERROR, "EOF in comment");
 
     case STRING:
+        begin (YYINITIAL);
         return new Symbol(TokenConstants.ERROR, "EOF in string constant");
 
     case STRING_ERR:
+        begin (YYINITIAL);
         return new Symbol(TokenConstants.ERROR, "EOF in string Constant");
 
     }
