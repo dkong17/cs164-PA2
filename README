@@ -121,7 +121,6 @@ Instructions
 
 Write-up for PA2J
 -----------------
-
 	Added were a private field COMMENT_COUNT and states COMMENT, STRING, 
 and STRING_ERR. The field was added in order to account for nesting of 
 comments enclosed by (*...*). Using a counter allowed the scanner to properly 
@@ -134,3 +133,22 @@ too long.
 	All four states (LINE_COMMENT, COMMENT, STRING, STRING_ERR) were added as
 cases to the switch for the end-of-file function. Each of the cases returns an
 ERROR symbol and reports the pertinent error message.
+=======
+Added were a private field COMMENT_COUNT and states COMMENT, STRING, 
+and STRING_ERR. The field was added in order to account for nesting of 
+comments enclosed by (*...*). Using a counter allowed the scanner to go beyond the capabilities
+of a regular language and properly enter and exit the COMMENT state. The COMMENT state 
+allowed for the detection of unmatched *) error (by only allowing return to YYINITIAL if COMMENT_COUNT were 0)
+and proper non-tokenization of characters within  comment blocks. Similarly, the STRING state
+helped find the "boundaries" for the declaration of string constants. STRING_ERR was a necessary additional states in order to continue
+lexing at the proper place after an invalid character (such as an unescaped newline) was found or the string was
+too long. After throwing an error, a \n or \" match in the STRING_ERR state led to a return to YYINITIAL to continue lexing.
+	All four states (LINE_COMMENT, COMMENT, STRING, STRING_ERR) were added as
+cases to the switch for the end-of-file function. Each of the cases returns an
+ERROR symbol and reports the pertinent error message before, like STRING_ERR, returning to YYINITIAL to continue lexing. 
+The ERROR symbol, like was mentioned in a Piazza post, allows for lexing to continue and is a sort of 'hack' to the
+actual behavior of a typical lexer that allows lexing to skip over an errant token and continue.
+	One of the most challenging and caution-inducing components to cool.lex is the correct identification 
+of regular expressions and their corresponding subsequent actions (such as adding to a string buffer or changing a state)
+being correct. We believe that our tests ensure that our regex strings correctly identify and ensure that we have adhered to
+COOL's restrictions.

@@ -5,7 +5,11 @@
 
 class CellularAutomaton inherits IO {
     population_map : String;
-   
+    goodString : String <- "This string is so good and \
+    proper look at how i escaped dat dere newline I'm a golden bear";
+    badString : String <- "I go to 
+    Stanfurd"
+    reallyBadString : String <- "\0";
     init(map : String) : SELF_TYPE {
         {
             population_map <- map;
@@ -19,7 +23,7 @@ class CellularAutomaton inherits IO {
             self;
         }
     };
-   
+   (* this is a comment (* with another comment inside *) *)
     num_cells() : Int {
         population_map.length()
     };
@@ -57,7 +61,8 @@ class CellularAutomaton inherits IO {
             '.'
         fi
     };
-   
+ -- this comment is a one-line comment that should terminate on the start of the newline
+
     evolve() : SELF_TYPE {
         (let position : Int in
         (let num : Int <- num_cells[] in
