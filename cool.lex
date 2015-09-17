@@ -112,22 +112,17 @@ TYPEID = [A-Z][A-Za-z0-9_]*
 OBJECTID = [a-z][A-z0-9_]*
 
 %%
-/* Add TYPEID and OBJECTID to the STRINGTABLE */
-<YYINITIAL>{TYPEID}     { return new Symbol(TokenConstants.TYPEID,
-                            AbstractTable.idtable.addString(yytext())); }
-<YYINITIAL>{OBJECTID}   { return new Symbol(TokenConstants.OBJECTID,
-                            AbstractTable.idtable.addString(yytext())); }
 
 /* Start lexing string constant. */
 <YYINITIAL>\"           { string_buf.setLength(0); yybegin(STRING); }
 
 
-<YYINITIAL>\n         { curr_lineno += 2; }
-<YYINITIAL>\s+          { ; }
+<YYINITIAL>\n           { curr_lineno += 1; }
+<YYINITIAL>[ \t\r\u000B\u000C]+          { ; }
 
 <YYINITIAL>"--"         { yybegin(LINE_COMMENT); }
-<LINE_COMMENT>.*        { ; }
 <LINE_COMMENT>\n        { yybegin(YYINITIAL); curr_lineno += 1; }
+<LINE_COMMENT>.*        { ; }
 
 /* (*...*) encased comments */ 
 <YYINITIAL>"(*"         { yybegin(COMMENT); comment_count += 1; }
@@ -135,8 +130,8 @@ OBJECTID = [a-z][A-z0-9_]*
 <COMMENT>"*)"           { comment_count -= 1;
                           if(comment_count==0) { yybegin(YYINITIAL); }
                         }
-<COMMENT>\n             { curr_lineno += 1; }
-<COMMENT>.              { ; }
+<COMMENT>\n             { curr_lineno += 1; System.out.println("adding for comment new line"); }
+<COMMENT>[^\n]          { ; }
 
 
 <YYINITIAL>"=>"   { return new Symbol(TokenConstants.DARROW); }
@@ -192,6 +187,13 @@ OBJECTID = [a-z][A-z0-9_]*
 <YYINITIAL>"{"      { return new Symbol(TokenConstants.LBRACE); }
 
 
+/* Add TYPEID and OBJECTID to the STRINGTABLE */
+<YYINITIAL>{TYPEID}     { return new Symbol(TokenConstants.TYPEID,
+                            AbstractTable.idtable.addString(yytext())); }
+<YYINITIAL>{OBJECTID}   { return new Symbol(TokenConstants.OBJECTID,
+                            AbstractTable.idtable.addString(yytext())); }
+
+
 <STRING>\"              { yybegin(YYINITIAL); 
                           String s = string_buf.toString();
                           if(s.length() >= MAX_STR_CONST) {
@@ -207,12 +209,12 @@ OBJECTID = [a-z][A-z0-9_]*
 <STRING>\n              { yybegin(YYINITIAL); curr_lineno += 1;
                           return new Symbol(TokenConstants.ERROR, "Unterminated string constant"); }
 
-<STRING>"\b"            { string_buf.append("\b"); }
-<STRING>"\f"            { string_buf.append("\f"); }
-<STRING>"\t"            { string_buf.append("\t"); }
+<STRING>\\b             { string_buf.append("\b"); }
+<STRING>\\f             { string_buf.append("\f"); }
+<STRING>\\t             { string_buf.append("\t"); }
 <STRING>\\\\n           { string_buf.append("\\n"); }
 <STRING>\\n             { string_buf.append("\n"); }
-<STRING>\\\n            { string_buf.append("\n"); }
+<STRING>\\\n            { string_buf.append("\n"); curr_lineno += 1; }
 <STRING>\\\"            { string_buf.append("\""); }
 <STRING>\\\\            { string_buf.append("\\"); }
 <STRING>\\              { ; }
