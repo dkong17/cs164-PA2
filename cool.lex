@@ -109,14 +109,16 @@ import java_cup.runtime.Symbol;
  * Reference Manual (CoolAid).  Please be sure to look there. */
 
 TYPEID = [A-Z][A-Za-z0-9_]*
-OBJECTID = [a-z][A-z0-9_]*
+OBJECTID = [a-z_]+[\w]*
 
 %%
 
 /* Start lexing string constant. */
 <YYINITIAL>\"           { string_buf.setLength(0); yybegin(STRING); }
-
-
+<YYINITIAL>\'           {  return new Symbol(TokenConstants.ERROR, "'");}
+<YYINITIAL>\[           {  return new Symbol(TokenConstants.ERROR, "[");}
+<YYINITIAL>\]           {  return new Symbol(TokenConstants.ERROR, "]");}
+<YYINITIAL>\>           {  return new Symbol(TokenConstants.ERROR, ">");}
 <YYINITIAL>\n           { curr_lineno += 1; }
 <YYINITIAL>[ \t\r\u000B\u000C]+          { ; }
 
