@@ -60,20 +60,25 @@ import java_cup.runtime.Symbol;
 	/* nothing special to do in the initial state */
 	break;
 
+<<<<<<< Updated upstream
+=======
+
+/* If necessary, add code for other states here, e.g:
+>>>>>>> Stashed changes
     case LINE_COMMENT:
-        begin (YYINITIAL);
+        yybegin(YYINITIAL);
         return new Symbol(TokenConstants.ERROR, "EOF in comment");
 
     case COMMENT:
-        begin (YYINITIAL);
+        yybegin(YYINITIAL);
         return new Symbol(TokenConstants.ERROR, "EOF in comment");
 
     case STRING:
-        begin (YYINITIAL);
+        yybegin(YYINITIAL);
         return new Symbol(TokenConstants.ERROR, "EOF in string constant");
 
     case STRING_ERR:
-        begin (YYINITIAL);
+        yybegin(YYINITIAL);
         return new Symbol(TokenConstants.ERROR, "EOF in string Constant");
 
     }
@@ -88,10 +93,15 @@ import java_cup.runtime.Symbol;
  * .
  * Hint: You might need additional start conditions. */
 %state LINE_COMMENT
+<<<<<<< Updated upstream
 
 %state COMMENT
 %state STRING
 %state STRING_ERR
+=======
+%state COMMENT
+%state STRING
+>>>>>>> Stashed changes
 
 /* Define lexical rules after the %% separator.  There is some code
  * provided for you that you may wish to use, but you may change it
@@ -120,12 +130,10 @@ OBJECTID = [a-z][A-z0-9_]*
 
 /* Start lexing string constant. */
 <YYINITIAL>\"           { string_buf.setLength(0); yybegin(STRING); }
-
-
-<YYINITIAL>\n	        { curr_lineno += 1; }
+<YYINITIAL>\n         { curr_lineno += 1; }
 <YYINITIAL>\s+          { ; }
 
-<YYINITIAL>"--"         { yybegin(LINE_COMMENT) }
+<YYINITIAL>"--"         { yybegin(LINE_COMMENT); }
 <LINE_COMMENT>.*        { ; }
 <LINE_COMMENT>\n        { yybegin(YYINITIAL); curr_lineno += 1; }
 
