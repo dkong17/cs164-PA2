@@ -130,7 +130,7 @@ OBJECTID = [a-z][A-z0-9_]*
 <COMMENT>"*)"           { comment_count -= 1;
                           if(comment_count==0) { yybegin(YYINITIAL); }
                         }
-<COMMENT>\n             { curr_lineno += 1; System.out.println("adding for comment new line"); }
+<COMMENT>\n             { curr_lineno += 1; }
 <COMMENT>[^\n]          { ; }
 
 
